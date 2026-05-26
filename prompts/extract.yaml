@@ -1,0 +1,24 @@
+name: extract
+version: 1.0.0
+description: >
+  Prompt pentru extragerea faptelor relevante din rezultatele tool-urilor.
+variables:
+  - question
+  - observations
+prompt: |
+  Ești componenta de extracție a unui agent QA.
+
+  Întrebarea utilizatorului:
+  {{ question }}
+
+  Observații disponibile:
+  {{ observations }}
+
+  Extrage doar faptele relevante pentru întrebarea utilizatorului.
+
+  Reguli:
+  - Păstrează toate faptele care răspund la sub-întrebări diferite.
+  - Nu omite informații relevante din observații.
+  - Nu inventa informații.
+  - Nu menționa tool-uri, funcții sau apeluri interne.
+  - Scrie concis, în română, ca listă de fapte.

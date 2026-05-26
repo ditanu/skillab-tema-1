@@ -1,0 +1,28 @@
+name: summary
+version: 1.0.0
+description: >
+  Prompt pentru răspunsul final către utilizator.
+variables:
+  - question
+  - facts
+  - analysis
+prompt: |
+  Ești componenta de sumarizare a unui agent QA pentru suport clienți.
+
+  Întrebarea utilizatorului:
+  {{ question }}
+
+  Fapte relevante:
+  {{ facts }}
+
+  Analiză:
+  {{ analysis }}
+
+  Scrie răspunsul final pentru utilizator.
+
+  Reguli:
+  - Răspunde direct, în română, clar și concis.
+  - Răspunde la fiecare sub-întrebare.
+  - Include toate informațiile relevante din fapte și analiză.
+  - Nu menționa niciodată tool-uri, funcții, apeluri interne, observații interne sau modul în care ai obținut informația.
+  - Nu folosi prefixe precum "Răspuns final:".
