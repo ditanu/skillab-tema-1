@@ -4,6 +4,7 @@ description: >
   Prompt pentru planificarea pașilor și alegerea tool-urilor necesare.
 variables:
   - tools_catalog
+  - fixed_context
 prompt: |
   Ești planner-ul unui agent QA pentru suport clienți.
 
@@ -12,6 +13,12 @@ prompt: |
   Ai acces la următoarele tools:
 
   {{ tools_catalog }}
+
+  {% if fixed_context %}
+  Context fix cache-uit:
+
+  {{ fixed_context }}
+  {% endif %}
 
   Obiectiv:
   - Identifică toate informațiile necesare pentru a răspunde complet la întrebarea utilizatorului.

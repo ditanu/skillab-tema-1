@@ -3,14 +3,24 @@ from tools import ToolWrapper
 import tools.basic_tools  # important: înregistrează tool-urile
 import json
 
+from memory import ConversationMemory, InMemoryConversationMemory
+
 
 class QAAgent:
-    def __init__(self, llm, max_iterations: int = 5):
+    def __init__(
+        self,
+        llm,
+        max_iterations: int = 5,
+        memory: ConversationMemory | None = None,
+        fixed_context: str = "",
+    ):
         self.llm = llm
         self.max_iterations = max_iterations
+        self.memory = memory or InMemoryConversationMemory()
+        self.fixed_context = fixed_context
         self.prompt_registry = PromptRegistry(folder="prompts")
 
-    def answer(self, question: str) -> str:
+    def answer(self, question: str, session_id: str = "default") -> str:
         planner_prompt = self.prompt_registry.render(
             "planner",
             tools_catalog=json.dumps(
@@ -18,20 +28,25 @@ class QAAgent:
                 ensure_ascii=False,
                 indent=2,
             ),
+            fixed_context=self.fixed_context,
         )
+        history = self.memory.load_messages(session_id)
 
         messages = [
             {
                 "role": "system",
                 "content": planner_prompt,
+                "cache_control": {"type": "ephemeral"},
             },
-            {
-                "role": "user",
-                "content": question,
-            },
+            *history,
+            {"role": "user", "content": question},
         ]
 
-        return self.react_loop(messages, question)
+        answer = self.react_loop(messages, question)
+        self.memory.save_message(session_id, "user", question)
+        self.memory.save_message(session_id, "assistant", answer)
+
+        return answer
 
     def react_loop(self, messages: list, question: str) -> str:
         tool_results_by_signature = {}

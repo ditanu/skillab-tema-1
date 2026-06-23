@@ -1,0 +1,46 @@
+query,label
+"Cauta politica de refund pentru cursuri",search
+"Gaseste programul echipei de suport",search
+"Unde gasesc emailul pentru intrebari urgente?",search
+"Cauta informatii despre facturare",search
+"Afla care este contactul pentru suport",search
+"Verifica in baza de cunostinte politica de rambursare",search
+"Cauta detalii despre termenul de 14 zile",search
+"Vreau informatii despre programul de lucru",search
+"Gaseste documentatia despre plata facturilor",search
+"Cauta raspunsul in knowledge base",search
+"Cauta in documentele interne raspunsul corect",search
+"Gaseste informatii despre suport clienti",search
+"Verifica daca exista o politica pentru refund",search
+"Cauta in baza locala detalii despre curs",search
+"Gaseste pagina cu programul de lucru",search
+"Extrage numele furnizorului din factura",extract
+"Scoate suma totala si data din document",extract
+"Identifica entitatile principale din text",extract
+"Extrage campurile: nume client, email si telefon",extract
+"Citeste factura si returneaza TVA-ul",extract
+"Parseaza contractul si extrage clauzele importante",extract
+"Extrage datele din PDF-ul incarcat",extract
+"Vreau valorile structurate din acest document",extract
+"Identifica persoanele si companiile mentionate",extract
+"Extrage informatiile de plata din chitanta",extract
+"Extrage numarul facturii si data scadenta",extract
+"Returneaza campurile structurate din contract",extract
+"Identifica valorile TVA si total de plata",extract
+"Scoate adresa si codul fiscal din document",extract
+"Parseaza textul si extrage entitatile",extract
+"Fa un rezumat scurt al conversatiei",summarize
+"Rezuma documentul in trei idei principale",summarize
+"Spune-mi pe scurt ce s-a discutat",summarize
+"Genereaza un sumar executiv",summarize
+"Sintetizeaza raspunsul pentru utilizator",summarize
+"Fa o concluzie clara pe baza faptelor",summarize
+"Rezuma istoricul acestei sesiuni",summarize
+"Condenseaza textul intr-un paragraf",summarize
+"Care sunt punctele cheie din analiza?",summarize
+"Scrie un rezumat final pentru client",summarize
+"Sintetizeaza raspunsul intr-o concluzie scurta",summarize
+"Fa o sinteza a informatiilor gasite",summarize
+"Transforma analiza intr-un sumar pentru client",summarize
+"Redu textul la ideile esentiale",summarize
+"Scrie pe scurt concluziile discutiei",summarize

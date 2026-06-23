@@ -1,6 +1,10 @@
 from dataclasses import dataclass
+from tempfile import TemporaryDirectory
 
 from agent import QAAgent
+from intent_classifier import load_examples, load_model, predict_intent, train_intent_classifier
+from memory import InMemoryConversationMemory
+from prompt_cache import PromptCacheMetrics
 from run_agent import LiteLLMClient
 from tools import ToolWrapper
 import tools.basic_tools  # important: registers tools
@@ -103,6 +107,29 @@ class InventedFormatToolLLM:
         )
 
 
+class MemoryAwareLLM:
+    def invoke(self, messages: list[dict], tools: list[dict] | None = None) -> FakeResponse:
+        assert tools is not None
+
+        user_messages = [
+            message["content"] for message in messages if message["role"] == "user"
+        ]
+        assistant_messages = [
+            message["content"] for message in messages if message["role"] == "assistant"
+        ]
+
+        if user_messages[-1] == "Mă numesc Andrei.":
+            return FakeResponse(content="Salut, Andrei.")
+
+        if user_messages[-1] == "Cum mă numesc?":
+            if "Mă numesc Andrei." in user_messages and "Salut, Andrei." in assistant_messages:
+                return FakeResponse(content="Te numești Andrei.")
+
+            return FakeResponse(content="Nu am această informație.")
+
+        raise AssertionError(f"Unexpected memory test messages: {messages}")
+
+
 def main():
     datetime_result = ToolWrapper.call("get_current_datetime", {})
     assert datetime_result.startswith("Data curentă: ")
@@ -126,6 +153,15 @@ def main():
     )
     assert invented_tool_answer == "Eroare: tool 'format_date' nu există."
 
+    memory = InMemoryConversationMemory(window=4)
+    memory_agent = QAAgent(MemoryAwareLLM(), memory=memory)
+    assert memory_agent.answer("Mă numesc Andrei.", session_id="andrei") == "Salut, Andrei."
+    assert memory_agent.answer("Cum mă numesc?", session_id="andrei") == "Te numești Andrei."
+    assert (
+        memory_agent.answer("Cum mă numesc?", session_id="alta-sesiune")
+        == "Nu am această informație."
+    )
+
     valid_message = LiteLLMClient._extract_message(
         {"choices": [{"message": {"content": "Răspuns test."}}]}
     )
@@ -144,6 +180,62 @@ def main():
         assert "provider unavailable" in str(error)
     else:
         raise AssertionError("Expected error response to raise RuntimeError.")
+
+    cache_client = LiteLLMClient(prompt_caching=True)
+    prepared = cache_client._prepare_messages(
+        [
+            {
+                "role": "system",
+                "content": "Prompt static.",
+                "cache_control": {"type": "ephemeral"},
+            },
+            {"role": "user", "content": "Întrebare dinamică."},
+        ]
+    )
+    assert prepared[0]["content"][0]["cache_control"] == {"type": "ephemeral"}
+    assert prepared[0]["content"][0]["text"] == "Prompt static."
+    assert "cache_control" not in prepared[0]
+    assert prepared[1]["content"] == "Întrebare dinamică."
+
+    uncached_prepared = LiteLLMClient(prompt_caching=False)._prepare_messages(
+        [
+            {
+                "role": "system",
+                "content": "Prompt static.",
+                "cache_control": {"type": "ephemeral"},
+            }
+        ]
+    )
+    assert uncached_prepared == [{"role": "system", "content": "Prompt static."}]
+
+    metrics = PromptCacheMetrics()
+    metrics.record(
+        usage={
+            "cache_creation_input_tokens": 2500,
+            "cache_read_input_tokens": 0,
+            "input_tokens": 120,
+        },
+        latency_seconds=2.0,
+    )
+    metrics.record(
+        usage={
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 2500,
+            "input_tokens": 80,
+        },
+        latency_seconds=0.8,
+    )
+    summary = metrics.summary()
+    assert summary["estimated_saved_input_tokens"] == 2250
+    assert summary["latency_reduction_percent"] == 60.0
+
+    with TemporaryDirectory() as tmpdir:
+        model_path = f"{tmpdir}/intent_classifier.pkl"
+        report = train_intent_classifier(load_examples(), model_path=model_path)
+        assert report["accuracy"] >= 0.80
+        intent_model = load_model(model_path)
+        assert predict_intent(intent_model, "Extrage suma din factura").label == "extract"
+        assert predict_intent(intent_model, "Fa un rezumat scurt").label == "summarize"
 
     print("Smoke tests passed.")
 
